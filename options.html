@@ -1,0 +1,30 @@
+<!-- options.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Albert the proofreader - Options</title>
+    <link rel="stylesheet" href="options.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Image de l'icône ajoutée ici avec la classe "icon" -->
+        <h1>
+            <img src="icons/icon-dog-100.png" alt="Icon" class="icon">
+            Albert the proofreader - Options
+        </h1>
+        <div class="input-group">
+            <label for="api-url">Ollama Server URL:</label>
+            <input type="text" id="api-url" placeholder="http://localhost:11434" />
+        </div>
+        <div class="input-group">
+            <label for="model-name">Model Name:</label>
+            <input type="text" id="model-name" placeholder="llama3.1:8b" />
+        </div>
+        <button id="save" class="button">Save Preferences</button>
+        <div id="status" class="status"></div>
+    </div>
+
+    <script src="options.js"></script>
+</body>
+</html>

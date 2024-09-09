@@ -1,0 +1,38 @@
+{
+"manifest_version": 3,
+"name": "Albert the proofreader",
+"version": "1.0",
+"permissions": [
+"contextMenus", "tabs", "activeTab","scripting", "storage"
+],
+"description": "This extension call a local ollama API with the selected text to fix it",
+"icons": {
+"48": "icons/icon-dog-48.png"
+},
+
+"content_scripts": [
+{
+"matches": ["<all_urls>"],
+"js": ["content.js"]
+}
+],
+
+"web_accessible_resources": [
+    {
+      "resources": ["icons/icon-dog-100.png"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+
+"background": {
+"service_worker": "background.js"
+},
+
+"action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "48": "icons/icon-dog-48.png"
+    }
+  },
+  "options_page": "options.html"
+}
