@@ -1,11 +1,13 @@
 <!-- options.html -->
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Albert the proofreader - Options</title>
     <link rel="stylesheet" href="options.css">
 </head>
+
 <body>
     <div class="container">
         <!-- Image de l'icône ajoutée ici avec la classe "icon" -->
@@ -14,12 +16,26 @@
             Albert the proofreader - Options
         </h1>
         <div class="input-group">
+            <label for="server-to-use">Server to use:</label>
+            <select id="server-to-use">
+                <option value="ollama">Ollama</option>
+                <option value="openai">OpenAI</option>
+            </select>
+        </div>
+        <div class="input-group">
             <label for="api-url">Ollama Server URL:</label>
             <input type="text" id="api-url" placeholder="http://localhost:11434" />
         </div>
         <div class="input-group">
             <label for="model-name">Model Name:</label>
-            <input type="text" id="model-name" placeholder="llama3.1:8b" />
+            <input type="text" id="model-name" placeholder="llama3.1:8b,gpt-3.5-turbo" />
+        </div>
+        <div class="input-group">
+            <label for="openai-api-key">OPENAI API KEY:</label>
+            <input type="text" id="openai-api-key" placeholder="Enter your OpenAI API Key" />
+            <a href="https://platform.openai.com/account/api-keys" target="_blank" title="Get your OpenAI API Key">
+                <span>❓</span>
+            </a>
         </div>
         <button id="save" class="button">Save Preferences</button>
         <div id="status" class="status"></div>
@@ -27,4 +43,5 @@
 
     <script src="options.js"></script>
 </body>
+
 </html>

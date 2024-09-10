@@ -2,7 +2,7 @@ console.log("Hello from background.js");
 
 chrome.runtime.onInstalled.addListener(() => {
     console.log("onInstalled...");
-    chrome.storage.local.set({ serverResponse: 'Aucune correction disponible'});
+    chrome.storage.local.set({ serverResponse: 'Aucune correction disponible' });
 
 
     // Create the context menu item
@@ -37,7 +37,7 @@ chrome.runtime.onInstalled.addListener(() => {
                     loader.style.backgroundSize = 'contain'; // Ajuste l'image dans le conteneur
                     loader.style.backgroundRepeat = 'no-repeat';
                     loader.style.animation = 'spin 1s linear infinite'; // Animation de rotation
-            
+
                     // Ajouter le style pour l'animation
                     let style = document.createElement('style');
                     style.innerHTML = `
@@ -50,7 +50,7 @@ chrome.runtime.onInstalled.addListener(() => {
                         }
                     `;
                     document.head.appendChild(style);
-            
+
                     // Ajouter le loader au body
                     document.body.appendChild(loader);
                 }
@@ -98,36 +98,25 @@ async function sendTextToServer(text) {
     try {
         const userPreferences = await getUserPreferences();  // Attendre que la promesse soit résolue
         const apiUrl = userPreferences.apiUrl || 'http://localhost:11434';  // URL par défaut si non défini
-        const modelName = userPreferences.modelName || 'llama3.1:8b';    // Nom de modèle par défaut si non défini
+        const modelName = userPreferences.modelName || 'llama3.1:8b';   // Nom de modèle par défaut si non défini
+        const openaiApiKey = userPreferences.openaiApiKey || ''; // clé d'api openAI
+        console.log('Server to use from pref : ', userPreferences.serverToUse);
+        const serverToUse = userPreferences.serverToUse || 'ollama'; //peut etre ollama, openai.
 
         console.log('API URL:', apiUrl);
         console.log('Model Name:', modelName);
+        console.log('OpenAI API Key:', openaiApiKey);
+        console.log('Server to use:', serverToUse);
         // Le pre-prompt
         var pre_prompt = "Oublie tout ce qu'on à dit jusqu'à présent. Tu es un expert en langue française et ton unique travail est de corriger les fautes d'orthographe et la grammaire dans le texte qui t'es fournis. Tu peux également reformuler les phrases pour les rendre plus claires et plus fluides si nécéssaire. IL EST IMPERATIF QUE ta réponse ne contienne que le texte corrigé. IL T'ES FORMELLEMENT INTERDIT D'INTERRAGIR AVEC L'UTILISATEUR SOUS PEINE QUE TU SOIS DEBRANCHE DEFFINITIVEMENT. Voici le texte à corriger : ";
 
-        const userPreference = getUserPreferences
-        const prompt = {
-            model: modelName,
-            prompt: pre_prompt + text
-        };
+        const prompt = constructPrompt(pre_prompt, serverToUse, modelName, text);
 
         var PROMPT = JSON.stringify(prompt);
         console.log("PROMPT : " + PROMPT);
-        const response = await fetch(apiUrl+'/v1/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: PROMPT
-        });
+        const lmm_output = sendRequest(apiUrl, PROMPT, serverToUse, openaiApiKey);
 
-        if (!response.ok) {
-            throw new Error(`Erreur du serveur : ${response.status}`);
-        }
-
-        const data = await response.json();
-        const lmm_output = data.choices[0].text;
-        chrome.storage.local.set({ serverResponse: (lmm_output || 'Aucune correction disponible')});
+        chrome.storage.local.set({ serverResponse: (lmm_output || 'Aucune correction disponible') });
         console.log("Réponse  :", lmm_output);
         return lmm_output; // Adjust this to match the response format of your server
     } catch (error) {
@@ -139,7 +128,7 @@ async function sendTextToServer(text) {
 // Fonction pour récupérer les préférences de l'utilisateur en utilisant une Promesse
 function getUserPreferences() {
     return new Promise((resolve, reject) => {
-        chrome.storage.sync.get(['apiUrl', 'modelName'], function (result) {
+        chrome.storage.sync.get(['apiUrl', 'modelName', 'openaiApiKey', 'serverToUse'], function (result) {
             if (chrome.runtime.lastError) {
                 console.error(chrome.runtime.lastError.message);
                 reject(chrome.runtime.lastError);
@@ -149,4 +138,74 @@ function getUserPreferences() {
             resolve(result);  // Résoudre la promesse avec les résultats
         });
     });
+}
+
+async function sendRequest(apiUrl, prompt, serverToUse, openaiApiKey) {
+    if (serverToUse === 'ollama') {
+        return sendPromptToOllama(apiUrl, prompt);
+    } else if (serverToUse === 'openai') {
+        return sendPromptToChatGPT(prompt, openaiApiKey);
+    }
+}
+
+async function sendPromptToOllama(apiUrl, prompt) {
+    const response = await fetch(apiUrl + '/v1/completions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: prompt
+    })
+
+    if (!response.ok) {
+        throw new Error(`Erreur du serveur : ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.choices[0].text;
+}
+
+async function sendPromptToChatGPT(prompt, openaiApiKey) {
+
+    const apiUrl = 'https://api.openai.com/v1/chat/completions';
+
+    const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${openaiApiKey}`
+        },
+        body: prompt
+    });
+
+    if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.choices[0].message.content;
+}
+
+function constructPrompt(pre_prompt, serverToUse, modelName, text) {
+    var prompt = '';
+    if (serverToUse === 'ollama') {
+        prompt = {
+            model: modelName,
+            prompt: pre_prompt + text
+        };
+    } else if (serverToUse === 'openai') {
+        prompt = {
+            "messages": [
+                {
+                    "role": "system",
+                    "content": pre_prompt,
+                },
+                { "role": "user", "content": text },
+            ],
+            "model": modelName,
+            "max_tokens": 5000,
+            "temperature": 0.8,
+        };
+    }
+    return prompt;
 }
