@@ -96,6 +96,7 @@ chrome.runtime.onInstalled.addListener(() => {
 // Function to send the selected text to the server
 async function sendTextToServer(text) {
     try {
+        console.log("Envoi du texte au serveur :", text);
         const userPreferences = await getUserPreferences();  // Attendre que la promesse soit résolue
         const apiUrl = userPreferences.apiUrl || 'http://localhost:11434';  // URL par défaut si non défini
         const modelName = userPreferences.modelName || 'llama3.1:8b';   // Nom de modèle par défaut si non défini
@@ -142,20 +143,24 @@ function getUserPreferences() {
 
 async function sendRequest(apiUrl, prompt, serverToUse, openaiApiKey) {
     if (serverToUse === 'ollama') {
+        console.log('Sending request to Ollama...');
         return sendPromptToOllama(apiUrl, prompt);
     } else if (serverToUse === 'openai') {
+        console.log('Sending request to OpenAI...');
         return sendPromptToChatGPT(prompt, openaiApiKey);
     }
 }
 
 async function sendPromptToOllama(apiUrl, prompt) {
-    const response = await fetch(apiUrl + '/v1/completions', {
+    const uri = apiUrl + '/v1/completions';
+    console.log('URI:', uri);
+    const response = await fetch(uri, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
         body: prompt
-    })
+    });
 
     if (!response.ok) {
         throw new Error(`Erreur du serveur : ${response.status}`);
