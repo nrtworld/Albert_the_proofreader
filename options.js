@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Remplir la liste déroulante des noms de modèles en fonction du serveur sélectionné
-    async function populateModelNames(server) {
+    async function populateModelNames(server, savedModelName = null) {
         modelNameInput.innerHTML = '';  // Effacer les options existantes
         let modelOptions = [];
 
@@ -53,6 +53,11 @@ document.addEventListener('DOMContentLoaded', function () {
             optElement.textContent = option;
             modelNameInput.appendChild(optElement);
         });
+
+        // Sélectionner le modèle précédemment sauvegardé s'il est dans la liste
+        if (savedModelName && modelOptions.includes(savedModelName)) {
+            modelNameInput.value = savedModelName;
+        }
     }
 
     // Initialiser les options à partir du stockage
@@ -60,15 +65,12 @@ document.addEventListener('DOMContentLoaded', function () {
         if (result.apiUrl) {
             apiUrlInput.value = result.apiUrl;
         }
-        if (result.modelName) {
-            modelNameInput.value = result.modelName;
-        }
         if (result.serverToUse) {
             serverToUseSelect.value = result.serverToUse;
             toggleFieldsVisibility();  // Ajuster la visibilité des champs en fonction du serveur stocké
             
-            // Remplir les modèles en fonction du serveur stocké
-            await populateModelNames(result.serverToUse); 
+            // Remplir les modèles en fonction du serveur stocké et pré-sélectionner le modèle si disponible
+            await populateModelNames(result.serverToUse, result.modelName);
         }
         if (result.openaiApiKey) {
             openaiApiKeyInput.value = result.openaiApiKey;
