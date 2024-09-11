@@ -28,8 +28,11 @@
         </div>
         <div class="input-group">
             <label for="model-name">Model Name:</label>
-            <input type="text" id="model-name" placeholder="llama3.1:8b,gpt-3.5-turbo" />
+            <select id="model-name">
+                <!-- Options will be dynamically populated based on server selection -->
+            </select>
         </div>
+        
         <div class="input-group">
             <label for="openai-api-key">OPENAI API KEY:</label>
             <input type="text" id="openai-api-key" placeholder="Enter your OpenAI API Key" />
