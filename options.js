@@ -6,6 +6,18 @@ document.addEventListener('DOMContentLoaded', function () {
     const saveButton = document.getElementById('save');
     const status = document.getElementById('status');
 
+    // Fonction pour afficher ou cacher les champs en fonction du serveur sélectionné
+    function toggleFieldsVisibility() {
+        const serverToUse = serverToUseSelect.value;
+        if (serverToUse === 'ollama') {
+            apiUrlInput.parentElement.style.display = 'block';  // Afficher "api-url"
+            openaiApiKeyInput.parentElement.style.display = 'none';  // Masquer "openai-api-key"
+        } else if (serverToUse === 'openai') {
+            apiUrlInput.parentElement.style.display = 'none';  // Masquer "api-url"
+            openaiApiKeyInput.parentElement.style.display = 'block';  // Afficher "openai-api-key"
+        }
+    }
+
     // Fonction pour récupérer les noms de modèles pour Ollama
     async function fetchOllamaModels() {
         try {
@@ -44,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Initialiser les options à partir du stockage
-    chrome.storage.sync.get(['apiUrl', 'modelName', 'serverToUse', 'openaiApiKey'], function (result) {
+    chrome.storage.sync.get(['apiUrl', 'modelName', 'serverToUse', 'openaiApiKey'], async function (result) {
         if (result.apiUrl) {
             apiUrlInput.value = result.apiUrl;
         }
@@ -53,16 +65,20 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         if (result.serverToUse) {
             serverToUseSelect.value = result.serverToUse;
-            populateModelNames(result.serverToUse);  // Remplir les modèles en fonction du serveur stocké
+            toggleFieldsVisibility();  // Ajuster la visibilité des champs en fonction du serveur stocké
+            
+            // Remplir les modèles en fonction du serveur stocké
+            await populateModelNames(result.serverToUse); 
         }
         if (result.openaiApiKey) {
             openaiApiKeyInput.value = result.openaiApiKey;
         }
     });
 
-    // Mettre à jour la liste déroulante des noms de modèles lorsque le serveur à utiliser est modifié
+    // Mettre à jour la liste déroulante des noms de modèles et la visibilité des champs lorsque le serveur à utiliser est modifié
     serverToUseSelect.addEventListener('change', function () {
         populateModelNames(serverToUseSelect.value);
+        toggleFieldsVisibility();  // Ajuster la visibilité des champs
     });
 
     // Sauvegarder les préférences lorsque l'utilisateur clique sur le bouton "Save"
@@ -99,4 +115,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     });
+
+    // Initialiser la visibilité des champs
+    toggleFieldsVisibility();
 });
