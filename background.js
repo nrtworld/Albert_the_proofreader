@@ -152,7 +152,7 @@ async function sendRequest(apiUrl, prompt, serverToUse, openaiApiKey) {
 }
 
 async function sendPromptToOllama(apiUrl, prompt) {
-    const uri = apiUrl + '/v1/completions';
+    const uri = apiUrl + '/api/generate';
     console.log('URI:', uri);
     const response = await fetch(uri, {
         method: 'POST',
@@ -167,7 +167,8 @@ async function sendPromptToOllama(apiUrl, prompt) {
     }
 
     const data = await response.json();
-    return data.choices[0].text;
+    console.log('Data:', data);
+    return data.response;
 }
 
 async function sendPromptToChatGPT(prompt, openaiApiKey) {
@@ -196,7 +197,8 @@ function constructPrompt(pre_prompt, serverToUse, modelName, text) {
     if (serverToUse === 'ollama') {
         prompt = {
             model: modelName,
-            prompt: pre_prompt + text
+            prompt: pre_prompt + text,
+            stream: false,
         };
     } else if (serverToUse === 'openai') {
         prompt = {
