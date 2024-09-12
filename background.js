@@ -77,17 +77,15 @@ chrome.runtime.onInstalled.addListener(() => {
                     args: [response] // Pass the server response to the function
                 });
             }).catch(error => {
-                console.error("Erreur lors de l'envoi du texte au serveur :", error);
-
                 // Step 3: Remove the loader in case of an error
                 chrome.scripting.executeScript({
                     target: { tabId: tab.id },
                     func: () => {
                         const loader = document.getElementById('myLoader');
                         if (loader) loader.remove();
-                        alert("Erreur lors de la requête. Veuillez réessayer.");
                     }
                 });
+                handleError(error);
             });
         }
     });
@@ -115,13 +113,12 @@ async function sendTextToServer(text) {
 
         var PROMPT = JSON.stringify(prompt);
         console.log("PROMPT : " + PROMPT);
-        const lmm_output = sendRequest(apiUrl, PROMPT, serverToUse, openaiApiKey);
+        const lmm_output = await sendRequest(apiUrl, PROMPT, serverToUse, openaiApiKey);
 
         chrome.storage.local.set({ serverResponse: (lmm_output || 'Aucune correction disponible') });
         console.log("Réponse  :", lmm_output);
         return lmm_output; // Adjust this to match the response format of your server
     } catch (error) {
-        console.error("Erreur lors de la requête au serveur :", error);
         throw error;
     }
 }
@@ -163,7 +160,7 @@ async function sendPromptToOllama(apiUrl, prompt) {
     });
 
     if (!response.ok) {
-        throw new Error(`Erreur du serveur : ${response.status}`);
+        throw new Error(`An error occurred during the call to your Ollama server. Check that you have correctly configured the extension and that your Ollama server is running. error :  ${response.status}`);
     }
 
     const data = await response.json();
@@ -185,7 +182,7 @@ async function sendPromptToChatGPT(prompt, openaiApiKey) {
     });
 
     if (!response.ok) {
-        throw new Error(`API request failed with status ${response.status}`);
+        throw new Error(`An error occurred during the call to OpenAi's API. Check that you have correctly configured the extension and that you still have credit on the OpenAi website. error : ${response.status}`);
     }
 
     const data = await response.json();
@@ -216,3 +213,34 @@ function constructPrompt(pre_prompt, serverToUse, modelName, text) {
     }
     return prompt;
 }
+
+
+// Error handler function to create a pop-up
+function handleError(error) {
+    console.error("l'erreur : " + error.message);
+
+    // Create a Chrome notification to display the error
+    chrome.notifications.create('notificationError', {
+        type: 'basic',
+        iconUrl: chrome.runtime.getURL('icons/icon-dog-100.png'), // Change the icon as needed
+        title: 'ALBERT has a message for you',
+        message: `${error.message}`,
+        requireInteraction: true,
+        priority: 2,
+        buttons: [
+            { title: 'Open Options' }
+        ],
+    });
+}
+
+chrome.notifications.onClicked.addListener(function(notificationId) {
+    if (notificationId === 'notificationError') {
+        // Ouvrir la fenêtre de l'extension ou une page spécifique
+        chrome.windows.create({
+            url: chrome.runtime.getURL('options.html'),  // Remplacez par le fichier HTML de votre extension
+            type: 'popup',
+            width: 400,
+            height: 500
+        });
+    }
+});

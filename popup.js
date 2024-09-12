@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Get the server response from chrome storage
     chrome.storage.local.get('serverResponse', (data) => {
-        console.log('data server response' + data.serverResponse)
+        console.log('data server response' + data)
         if (data) {
             document.getElementById('response').textContent = data.serverResponse;
         } else {

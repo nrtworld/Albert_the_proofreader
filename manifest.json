@@ -3,11 +3,12 @@
 "name": "Albert the proofreader",
 "version": "1.0",
 "permissions": [
-"contextMenus", "tabs", "activeTab","scripting", "storage"
+"contextMenus", "tabs", "activeTab","scripting", "notifications", "storage"
 ],
-"description": "This extension call a local ollama API with the selected text to fix it",
+"description": "This extension call a local ollama API or OpenAI API with the selected text to fix it",
 "icons": {
-"48": "icons/icon-dog-48.png"
+"48": "icons/icon-dog-48.png",
+"100": "icons/icon-dog-100.png"
 },
 
 "content_scripts": [
